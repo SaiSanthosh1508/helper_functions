@@ -1,34 +1,35 @@
-
 import torch
 import os
-import torchvision
-from torchvision import datasets
+from torchvision import transforms
 from torch.utils.data import DataLoader
+from torchvision.datasets import ImageFolder
+from typing import Tuple,List,Union
 
-def create_dataloaders(train_dir: str,
-                       test_dir: str,
-                       transforms,
-                       batch_size=32,
-                       seed=42,
-                       num_workers=os.cpu_count()):
-    # Load train and test datasets using ImageFolder
-    train_dataset = torchvision.datasets.ImageFolder(train_dir, transform=transforms)
-    test_dataset = torchvision.datasets.ImageFolder(test_dir, transform=transforms)
-    
-    # Create DataLoaders
-    train_dataloader = DataLoader(dataset=train_dataset,
-                                  batch_size=batch_size,
-                                  shuffle=True,  # Shuffle the training data
-                                  num_workers=num_workers,
-                                  pin_memory=True)
-    
-    test_dataloader = DataLoader(dataset=test_dataset,
-                                 batch_size=batch_size,
-                                 shuffle=False,  # Do not shuffle test data
-                                 num_workers=num_workers,
-                                 pin_memory=True)
-    
-    # Extract class names
-    class_names = train_dataset.classes
+def create_dataloader(dir: str,
+                      transforms: transforms.Compose,
+                      batch_size: int,
+                      shuffle: bool = False,
+                      num_workers: int = os.cpu_count(),
+                      return_class_names : bool = False
+                      )-> Union[DataLoader, Tuple[DataLoader, List[str]]]:
+  """
+  Create datalaoders for computer vision tasks utilising ImageFolder and DataLoader.
 
-    return train_dataloader, test_dataloader, class_names
+  Args:
+    dir : Path to the directory
+    transforms : Transforms to apply to the data
+    batch_size : Batch size to use
+    shuffle : Whether to shuffle the data defaults to False
+    num_workers : Number of workers to use defaults to os.cpu_count()
+    return_class_names : Whether to return the class names if True return dataloader and class names else return dataloader
+
+  Returns:
+    dataloader : DataLoader object
+  """
+
+  dataset = ImageFolder(root=dir,transform=transforms)
+  class_names = dataset.classes
+  dataloader = DataLoader(dataset=dataset,batch_size=batch_size,shuffle=shuffle,num_workers=num_workers)
+  if return_class_names:
+    return dataloader,class_names
+  return dataloader
